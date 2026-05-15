@@ -4,15 +4,21 @@ RHPL Policies & Procedures assistant — a Gmail sidebar add-on backed by Vertex
 AI Agent Builder, with a structured eval harness that compared it side-by-side
 against the previous on-prem Qwen3-14B RAG before cutover.
 
-> **Status (2026-05-13):** **Live and published to the Google Workspace
+> **Status (2026-05-15):** **Live and published to the Google Workspace
 > Marketplace** for `rhpl.org` (Private / Admin-Only install). Backed by
 > `your-policies-engine` — a Vertex AI Search engine ingesting from the
 > Library Director's intranet policy folders nightly. Citations resolve to
 > live intranet Drive URLs via `structData.drive_url` on each Vertex
-> reference (no static citation map needed). Next: admin-install to the
-> broader Library Admin OU for pilot rollout; then schedule the nightly
-> sync cron; then Phase 6 (intranet-vs-public-web consistency checker).
-> Approved plan: `~/.claude/plans/purrfect-puzzling-liskov.md`.
+> reference (no static citation map needed). **Now layered with Google's
+> Model Armor in inspect-only mode** on every user prompt (template
+> `your-modelarmor-template` in `us-east4`) — verdicts logged to Cloud Logging,
+> Vertex behavior unchanged during pilot (see `RUNBOOK.md`). Next:
+> admin-install to the broader Library Admin OU for pilot rollout; then
+> schedule the nightly sync cron; then 30-60-day Model Armor audit-log
+> review → flip to enforcement; then Phase 6 (intranet-vs-public-web
+> consistency checker). Approved plans:
+> `~/.claude/plans/purrfect-puzzling-liskov.md` (core build),
+> `~/.claude/plans/plan-does-it-curried-manatee.md` (Model Armor).
 
 ## Background
 
@@ -105,12 +111,22 @@ Vertex AI Search data store `your-policies-datastore`
               ▼
 Engine `your-policies-engine` (Enterprise tier + LLM Add-On)
               │
-              ▼  (Apps Script :answer call)
+              ▼  (Apps Script :answer call, after Model Armor pre-screen)
 Staff member in Gmail sees:
   - Grounded answer with policy citations
   - Each citation is a clickable button → opens live intranet
     Drive PDF via structData.drive_url
 ```
+
+**Model Armor pre-screen.** Every fresh user question (cache miss) is sent
+to Google's Model Armor `sanitizeUserPrompt` against template
+`your-modelarmor-template` (us-east4) before the Vertex `:answer` call. Currently
+inspect-only — verdicts (prompt-injection, RAI, malicious-URI, CSAM) are
+logged to Cloud Logging on `your-gcp-project` and to Apps Script
+Executions, but never alter the answer the user sees. Fail-open: if Model
+Armor itself errors, Vertex still gets called. See `RUNBOOK.md` →
+"Model Armor — inspect-only pilot" for verdict review, threshold tuning,
+and the enforcement-mode swap.
 
 ## For new operators standing this up from scratch
 
