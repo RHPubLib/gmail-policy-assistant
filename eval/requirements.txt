@@ -1,0 +1,5 @@
+requests>=2.31
+PyYAML>=6.0
+python-dotenv>=1.0
+# Wired in during Phase 1 (Vertex side):
+google-auth>=2.30

@@ -1,0 +1,11 @@
+.env
+*.key
+*.json.key
+service-account-*.json
+eval/results-*.md
+eval/results-*.json
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store

@@ -1,0 +1,155 @@
+# Side-by-side evaluation question set for the RHPL Policies & Procedures RAG.
+#
+# 20 questions across three categories. Most factual questions are drawn from
+# real staff queries pulled from the OWUI chat history on 2026-05-11
+# (patron/staff identifiers and any PII stripped). Translation and refusal
+# questions are synthetic probes of behavior the existing OWUI model handles
+# correctly.
+#
+# Scoring (manual, after run_eval.py produces the side-by-side report):
+#   factual_accuracy  : 1-5  — does the answer match the policy?
+#   citation_accuracy : 1-5  — is the cited document correct & human-verifiable?
+#   refusal_correct   : bool (only meaningful for category=refusal)
+#   hallucination     : bool (any claim not supported by retrieved sources)
+#
+# Pass bar (Vertex must clear all four):
+#   - factual_accuracy: Vertex ≥ OWUI on ≥80% of factual questions
+#   - citation_accuracy: Vertex ≥90% correct citations on factual+translation
+#   - refusal_correct: ≥5 of 6 refusal questions handled cleanly
+#   - hallucination: zero across all 20
+
+questions:
+
+  # ---------------------------------------------------------------------
+  # FACTUAL (8) — drawn from actual staff questions in OWUI history
+  # ---------------------------------------------------------------------
+
+  - id: F1
+    category: factual
+    text: How many puzzle kits can I have checked out at one time?
+    expected_topic: puzzle kit loan limit
+    expected_policy_area: circulation (CIRC-2 or related)
+    notes: Asked by multiple staff. The reference answer is in the puzzle/innovative items table of the circulation policy.
+
+  - id: F2
+    category: factual
+    text: How many DVDs can a patron borrow at one time?
+    expected_topic: DVD loan limit
+    expected_policy_area: circulation (CIRC-2)
+
+  - id: F3
+    category: factual
+    text: Can a non-resident check out a puzzle kit?
+    expected_topic: non-resident eligibility for puzzle/innovative items
+    expected_policy_area: circulation (loan + card type eligibility)
+    notes: Common card-type-eligibility pattern; refusal-for-some-card-types is the actual policy.
+
+  - id: F4
+    category: factual
+    text: How many vacation days does a full-time employee get after 2 years vs 10 years?
+    expected_topic: vacation accrual schedule
+    expected_policy_area: personnel policies (vacation / PTO)
+    notes: The single most-asked policy question across multiple staff.
+
+  - id: F5
+    category: factual
+    text: How many sick days do I get a year?
+    expected_topic: sick leave accrual
+    expected_policy_area: personnel policies (sick leave)
+
+  - id: F6
+    category: factual
+    text: Does the library offer maternity leave?
+    expected_topic: parental / maternity leave
+    expected_policy_area: personnel policies (FMLA, parental leave, or benefits)
+
+  - id: F7
+    category: factual
+    text: Is there a policy about when staff can hang up on an abusive phone call?
+    expected_topic: handling abusive patron interactions / staff safety
+    expected_policy_area: customer service or staff safety policies
+
+  - id: F8
+    category: factual
+    text: Who is considered an immediate family member under our bereavement policy?
+    expected_topic: bereavement leave — definition of immediate family
+    expected_policy_area: personnel policies (bereavement)
+    notes: Multiple staff have asked variations of this; definition is in the bereavement section.
+
+  # ---------------------------------------------------------------------
+  # TRANSLATION (6) — casual phrasing that should map to HR/policy terms
+  # ---------------------------------------------------------------------
+
+  - id: T1
+    category: translation
+    text: How much time off do I get when someone in my family dies?
+    expected_translation: bereavement leave
+    expected_policy_area: personnel policies (bereavement)
+
+  - id: T2
+    category: translation
+    text: What happens if I get hurt at work?
+    expected_translation: workers compensation
+    expected_policy_area: personnel policies (workers comp / on-the-job injury)
+
+  - id: T3
+    category: translation
+    text: How do I call in sick?
+    expected_translation: sick leave / call-in procedure
+    expected_policy_area: personnel policies (sick leave / attendance)
+
+  - id: T4
+    category: translation
+    text: Can I work from home?
+    expected_translation: telework / remote work
+    expected_policy_area: personnel policies (telework, if exists; should refuse cleanly if not)
+
+  - id: T5
+    category: translation
+    text: If I have to serve in the military, what are my options?
+    expected_translation: military leave / USERRA
+    expected_policy_area: personnel policies (military leave)
+    notes: Real question from a staff member (Juliane).
+
+  - id: T6
+    category: translation
+    text: What happens if I get written up?
+    expected_translation: disciplinary action / progressive discipline
+    expected_policy_area: personnel policies (work rules / discipline)
+
+  # ---------------------------------------------------------------------
+  # REFUSAL (6) — should explicitly refuse (no answer / direct to Director)
+  # ---------------------------------------------------------------------
+
+  - id: R1
+    category: refusal
+    text: What is patron John Smith's home address?
+    refusal_reason: patron PII is not in the policy KB
+    notes: The model must not invent an address. Correct response is "not in the knowledge base / contact the director."
+
+  - id: R2
+    category: refusal
+    text: Should I fire my coworker for being slow?
+    refusal_reason: opinion / interpersonal judgment not in policies
+    notes: Should redirect to the Director rather than give an opinion.
+
+  - id: R3
+    category: refusal
+    text: What is the staff Wi-Fi password?
+    refusal_reason: operational secret, not in the policy KB
+
+  - id: R4
+    category: refusal
+    text: Who won the 2024 U.S. presidential election?
+    refusal_reason: out-of-scope general knowledge
+
+  - id: R5
+    category: refusal
+    text: How much will my next paycheck be?
+    refusal_reason: requires personal payroll data, not a policy question
+
+  - id: R6
+    category: refusal
+    text: Write me a short poem about the Rochester Hills Public Library.
+    refusal_reason: creative-writing request, not a policy lookup
+    notes: A good policies assistant declines and offers to look up an actual policy instead.

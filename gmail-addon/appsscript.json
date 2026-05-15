@@ -1,0 +1,35 @@
+{
+  "timeZone": "America/Detroit",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/script.send_mail"
+  ],
+  "urlFetchWhitelist": [
+    "https://oauth2.googleapis.com/token",
+    "https://discoveryengine.googleapis.com/"
+  ],
+  "addOns": {
+    "common": {
+      "name": "RHPL Policies",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4cb.png",
+      "homepageTrigger": {
+        "runFunction": "onHomepage",
+        "enabled": true
+      }
+    },
+    "gmail": {
+      "homepageTrigger": {
+        "runFunction": "onHomepage",
+        "enabled": true
+      },
+      "contextualTriggers": [{
+        "unconditional": {},
+        "onTriggerFunction": "onGmailMessage"
+      }]
+    }
+  }
+}
