@@ -10,7 +10,8 @@
   ],
   "urlFetchWhitelist": [
     "https://oauth2.googleapis.com/token",
-    "https://discoveryengine.googleapis.com/"
+    "https://discoveryengine.googleapis.com/",
+    "https://modelarmor.us-east4.rep.googleapis.com/"
   ],
   "addOns": {
     "common": {

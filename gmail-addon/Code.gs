@@ -395,6 +395,45 @@ const PREAMBLE = (
   'Always write in American English.'
 );
 
+/** Model Armor pre-screen — pilot mode: verdict is logged but never enforced.
+ *  Fail-open on errors. Switch to block-on-MATCH_FOUND after 30-60 days of
+ *  clean Cloud Logging review (template "Prompts and responses" log on
+ *  your-gcp-project). */
+function sanitizeUserPrompt_(question, token) {
+  const props      = PropertiesService.getScriptProperties();
+  const projectId  = props.getProperty('GCP_PROJECT_ID');
+  const region     = props.getProperty('MODEL_ARMOR_REGION') || 'us-east4';
+  const templateId = props.getProperty('MODEL_ARMOR_TEMPLATE_ID') || 'your-modelarmor-template';
+
+  if (!projectId) return null;
+
+  const url = 'https://modelarmor.' + region + '.rep.googleapis.com/v1' +
+    '/projects/' + projectId +
+    '/locations/' + region +
+    '/templates/' + templateId + ':sanitizeUserPrompt';
+
+  try {
+    const resp = UrlFetchApp.fetch(url, {
+      method:             'post',
+      contentType:        'application/json',
+      payload:            JSON.stringify({ userPromptData: { text: question } }),
+      headers:            { Authorization: 'Bearer ' + token },
+      muteHttpExceptions: true,
+    });
+    const code    = resp.getResponseCode();
+    const respTxt = resp.getContentText();
+    if (code < 200 || code >= 300) {
+      Logger.log('Model Armor HTTP ' + code + ': ' + respTxt);
+      return null;
+    }
+    Logger.log('Model Armor verdict: ' + respTxt);
+    return JSON.parse(respTxt);
+  } catch (err) {
+    Logger.log('Model Armor call failed: ' + err);
+    return null;
+  }
+}
+
 /** Query Vertex; returns { answer, sources: [{filename, title, snippet}] }. */
 function askPolicies_(question) {
   // Per-user answer cache: avoid re-hitting Vertex for the same question
@@ -410,6 +449,7 @@ function askPolicies_(question) {
   }
 
   const token = getServiceAccountToken_();
+  sanitizeUserPrompt_(question, token);  // pilot: verdict logged, not enforced
   const props = PropertiesService.getScriptProperties();
   const projectId = props.getProperty('GCP_PROJECT_ID');
   const engineId  = props.getProperty('VERTEX_ENGINE_ID');
