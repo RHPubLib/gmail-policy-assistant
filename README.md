@@ -8,9 +8,10 @@ answer, and click straight through to the source policy.
 ## Why we built it
 
 RHPL staff already have a great way to search internal documents: our on-prem
-AI server running a local Qwen model over the library's document knowledge
-base. That stays — staff can still leverage the local model for open-ended
-document search whenever they want.
+AI server running a local Qwen model over the library's document knowledge base
+([**RHPL-Local-RAG**](https://github.com/RHPubLib/RHPL-Local-RAG)). That stays —
+staff can still leverage the local model for open-ended document search whenever
+they want.
 
 We built this add-on as an **additional benefit on top of that** — because we
 wanted policy answers to be as easy to reach as possible. By building it as an
@@ -116,6 +117,10 @@ deployment config, never in committed code.
 
 ## Related projects
 
+- [`RHPL-Local-RAG`](https://github.com/RHPubLib/RHPL-Local-RAG) — the on-prem,
+  local-Qwen version of this same grounded policy search. Runs entirely on
+  library-owned hardware with no data leaving the building; a privacy-first
+  alternative to this cloud-based add-on.
 - [`esources`](https://github.com/RHPubLib/esources) — RHPL's open-source
   eResources service. This add-on reuses the same Gmail Add-on UX pattern as
   RHPL's other staff tools.
