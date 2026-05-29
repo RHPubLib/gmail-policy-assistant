@@ -22,22 +22,22 @@ working.
 
 ## What it looks like
 
-Ask a question in the sidebar and get a grounded answer with the exact policies
-it drew from, each one a clickable source:
-
-![The Policies Add-on open in the Gmail sidebar, showing a question, a grounded answer, and clickable policy sources](screenshots/01-sidebar-answer.png)
-
 Click any source and the underlying policy document opens, so staff can verify
 the answer against the original text:
 
 ![A policy answer in the sidebar next to the source policy PDF it opened from a citation](screenshots/02-citation-to-source.png)
+
+Ask a question in the sidebar and get a grounded answer with the exact policies
+it drew from, each one a clickable source:
+
+<img src="screenshots/01-sidebar-answer.png" alt="The Policies Add-on open in the Gmail sidebar, showing a question, a grounded answer, and clickable policy sources" width="320" />
 
 ## How it all fits together
 
 ```mermaid
 flowchart LR
   D([Library Director]) -->|edits policy PDFs and Docs| INTRANET[Intranet policy folders]
-  INTRANET -->|nightly sync, converted to clean text| KB[(Searchable policy<br/>knowledge base<br/>160+ documents)]
+  INTRANET -->|nightly sync| KB[(Searchable policy<br/>knowledge base<br/>160+ documents)]
 
   S([Staff member in Gmail]) -->|asks a plain-language question| ADDON[Policies Add-on<br/>Gmail sidebar]
   ADDON -->|grounded search| KB
@@ -79,8 +79,10 @@ bar before changes reach staff.
 
 ## Cost
 
-The add-on is designed to run at a very low, capped monthly cost. Spending is
-protected by a layered guardrail stack:
+At our scale, the underlying Vertex AI usage falls within its free limits, and
+we don't expect staff usage to exceed those limits. We still put budget
+guardrails in place just in case, so an unexpected spike can never turn into a
+surprise bill:
 
 | Layer | What it does |
 |---|---|
