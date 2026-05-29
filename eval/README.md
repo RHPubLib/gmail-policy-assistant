@@ -34,7 +34,7 @@ python3 eval/run_eval.py                  # both backends, side-by-side
 ## Pass-bar
 
 Reproduced from the approved plan
-(`~/.claude/plans/purrfect-puzzling-liskov.md`):
+(`<internal build plan>`):
 
 - **Factual accuracy**: Vertex ≥ OWUI on ≥80% of the 8 factual questions
 - **Citation accuracy**: Vertex ≥90% correct citations on factual + translation

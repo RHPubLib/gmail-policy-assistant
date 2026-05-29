@@ -50,7 +50,7 @@ once-converted snapshot.
    HTTP 500s on a brand-new engine.
 
 2. **Pivot to Docling-converted MDs:** uploaded the 157 MDs from
-   `~/local-ai/kb-converted/` to `gs://your-policies-kb-bucket/_md/` via a JSONL
+   `/path/to/kb-converted/` to `gs://your-policies-kb-bucket/_md/` via a JSONL
    manifest with explicit `mimeType: text/plain`. Created `policies-kb-md` data store +
    `your-policies-md` engine. **148 of 157 imported successfully**; 9 failed processing
    (likely empty or oddly-formatted MDs — not the ones referenced by the eval set).

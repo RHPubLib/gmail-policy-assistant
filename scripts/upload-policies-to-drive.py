@@ -25,7 +25,7 @@ from googleapiclient.http import MediaFileUpload
 
 KEY_PATH = Path.home() / ".config/policies-addon/sa-key.json"
 SHARED_DRIVE_ID = "0ADfIkowMXptsUk9PVA"
-SOURCE_DIR = Path("~/local-ai/kb-converted")
+SOURCE_DIR = Path("/path/to/kb-converted")
 SKIP_FILENAMES = {"upload.log"}
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 

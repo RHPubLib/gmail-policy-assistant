@@ -33,7 +33,7 @@ The OWUI pipeline has already converted source PDFs to markdown. Copy them up:
 
 ```bash
 # From the local-ai server:
-cd ~/local-ai/kb-converted
+cd /path/to/kb-converted
 
 # Verify what you have:
 find . -name "*.md" | head -20
@@ -43,7 +43,7 @@ find . -name "*.md" | wc -l    # how many docs?
 # web UI (drag-and-drop the top-level folders).
 # rclone setup is one-time: rclone config → add a "drive" remote scoped to the
 # Shared Drive. Then:
-rclone copy ~/local-ai/kb-converted/ \
+rclone copy /path/to/kb-converted/ \
   rhpl-shared-drive:"RHPL Policies KB/" \
   --drive-shared-with-me --progress
 ```

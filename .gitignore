@@ -9,3 +9,9 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+
+# Internal-only — RHPL-specific ops/planning runbooks + generated data; never publish
+CLAUDE.md
+RUNBOOK.md
+BACKLOG.md
+gmail-addon/citation-map.json
