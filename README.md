@@ -1,195 +1,123 @@
-# policies-addon
+# RHPL Policies Add-on
 
-RHPL Policies & Procedures assistant — a Gmail sidebar add-on backed by Vertex
-AI Agent Builder, with a structured eval harness that compared it side-by-side
-against the previous on-prem Qwen3-14B RAG before cutover.
+An open-source Gmail sidebar add-on, built by Rochester Hills Public Library,
+that lets staff search the library's **160+ board policies and procedures**
+from right inside Gmail — ask a question in plain language, get a grounded
+answer, and click straight through to the source policy.
 
-> **Status (2026-05-15):** **Live and published to the Google Workspace
-> Marketplace** for `rhpl.org` (Private / Admin-Only install). Backed by
-> `your-policies-engine` — a Vertex AI Search engine ingesting from the
-> Library Director's intranet policy folders nightly. Citations resolve to
-> live intranet Drive URLs via `structData.drive_url` on each Vertex
-> reference (no static citation map needed). **Now layered with Google's
-> Model Armor in inspect-only mode** on every user prompt (template
-> `your-modelarmor-template` in `us-east4`) — verdicts logged to Cloud Logging,
-> Vertex behavior unchanged during pilot (see `RUNBOOK.md`). Next:
-> admin-install to the broader Library Admin OU for pilot rollout; then
-> schedule the nightly sync cron; then 30-60-day Model Armor audit-log
-> review → flip to enforcement; then Phase 6 (intranet-vs-public-web
-> consistency checker). Approved plans:
-> `~/.claude/plans/purrfect-puzzling-liskov.md` (core build),
-> `~/.claude/plans/plan-does-it-curried-manatee.md` (Model Armor).
+## Why we built it
 
-## Background
+RHPL staff already have a great way to search internal documents: our on-prem
+AI server running a local Qwen model over the library's document knowledge
+base. That stays — staff can still leverage the local model for open-ended
+document search whenever they want.
 
-The first-generation RHPL Policies & Procedures assistant runs on the
-on-prem AI server (Qwen3-14B-FP8 + Open WebUI + Docling KB). It works, but
-real usage in March–May 2026 was 31 chats / 13 staff / 130 messages, and
-declining. The cost of a dedicated GPU slice for ~50 questions/month didn't
-match the value being delivered.
+We built this add-on as an **additional benefit on top of that** — because we
+wanted policy answers to be as easy to reach as possible. By building it as an
+application right into the Gmail right sidebar, staff get quick, easy access to
+hunt through our 160+ documents and files for specific policy verbiage
+**without ever leaving their primary screen**. Most of the day already happens
+in Gmail; now a policy question is one click away from wherever they're already
+working.
 
-This project moves the policies assistant to Vertex AI Agent Builder (~$3/mo,
-covered by Google for Nonprofits credit) and surfaces it as a Gmail Add-on
-sidebar — same UX pattern as RHPL's existing Patron Check tool. The on-prem
-GPU keeps serving the Polaris LEAP SQL Helper and Advanced MS SQL Coder,
-which have justified usage profiles.
+## What it looks like
 
-The non-hallucination behavior that made the on-prem assistant trustworthy
-(cite the policy, refuse when not in KB, translate casual phrasing into HR
-vocabulary) is preserved via:
-- Vertex AI Search grounding + required citations
-- A custom system prompt lifted from the on-prem version
-- A 20-question side-by-side eval gate (`eval/`) that must clear a written
-  pass-bar before the Gmail Add-on is built against Vertex
+Ask a question in the sidebar and get a grounded answer with the exact policies
+it drew from, each one a clickable source:
+
+![The Policies Add-on open in the Gmail sidebar, showing a question, a grounded answer, and clickable policy sources](screenshots/01-sidebar-answer.png)
+
+Click any source and the underlying policy document opens, so staff can verify
+the answer against the original text:
+
+![A policy answer in the sidebar next to the source policy PDF it opened from a citation](screenshots/02-citation-to-source.png)
+
+## How it all fits together
+
+```mermaid
+flowchart LR
+  D([Library Director]) -->|edits policy PDFs and Docs| INTRANET[Intranet policy folders]
+  INTRANET -->|nightly sync, converted to clean text| KB[(Searchable policy<br/>knowledge base<br/>160+ documents)]
+
+  S([Staff member in Gmail]) -->|asks a plain-language question| ADDON[Policies Add-on<br/>Gmail sidebar]
+  ADDON -->|grounded search| KB
+  KB -->|answer + citations| ADDON
+  ADDON -->|click a citation| SRC[Opens the source<br/>policy document]
+```
+
+1. The Library Director maintains the policies and procedures as normal, in the
+   library's intranet folders.
+2. A nightly job picks up changes, converts each document to clean text, and
+   loads it into a searchable, grounded knowledge base.
+3. A staff member asks a question from the Gmail sidebar.
+4. The add-on searches the knowledge base and returns an answer **grounded in
+   the actual policy text**, with each cited policy shown as a button.
+5. Clicking a citation opens the source document, so the answer can always be
+   traced back to the original policy.
+
+## Answers you can trust
+
+Policy questions are exactly the kind of thing where a confident-but-wrong
+answer is worse than no answer. This add-on is built around three behaviors
+that keep it trustworthy:
+
+1. **Cite the policy.** Every answer is grounded in specific documents from the
+   library's own policy set, and each source is surfaced as a clickable
+   citation. Nothing is presented as fact without a document behind it.
+2. **Refuse when the answer isn't in the policies.** The assistant doesn't
+   invent answers or reason from general HR/library knowledge. If the question
+   isn't covered by the policies, it says so and points the staff member to
+   their departmental manager or the Library Director.
+3. **Translate casual phrasing into the right vocabulary.** Staff can ask "time
+   off when someone in my family dies" and the assistant maps it to the
+   bereavement policy — they don't have to already know the formal term.
+
+These behaviors are protected by an automated evaluation gate (see `eval/`): a
+set of test questions covering factual accuracy, citation accuracy, correct
+refusals, and zero-hallucination cases. The knowledge base has to clear that
+bar before changes reach staff.
+
+## Cost
+
+The add-on is designed to run at a very low, capped monthly cost. Spending is
+protected by a layered guardrail stack:
+
+| Layer | What it does |
+|---|---|
+| **Budget + email alerts** | Notifies as usage climbs toward the annual cap |
+| **Hard-cap function** | Automatically detaches billing if the cap is reached |
+| **Per-API quotas** | Caps request and token rates so a runaway loop hits a wall first |
+
+The layers stack: a runaway loop hits the quota wall, alerts fire, and the hard
+cap stops billing if alerts are ignored. See `RUNBOOK.md` for details.
 
 ## Repo layout
 
 ```
 .
-├── README.md                           This file
-├── RUNBOOK.md                          Cost-cap, key rotation, sync, Marketplace ops
-├── .env.template                       Copy to .env, fill in (for the eval harness)
+├── README.md                 This file
+├── RUNBOOK.md                Day-to-day operations: cost cap, sync, ops
+├── .env.template             Copy to .env and fill in (for the eval harness)
 │
-├── eval/                               Phase 2 — side-by-side comparison
-│   ├── README.md                       How to run and score the eval
-│   ├── findings.md                     Phase 2 pass-bar verdict + decision
-│   ├── questions.yaml                  20 test questions (real + synthetic)
-│   ├── run_eval.py                     Harness — OWUI + Vertex backends
-│   ├── requirements.txt
-│   └── results-*.md / *.json           Generated by run_eval.py (gitignored)
-│
-├── scripts/                            All phases' setup scripts + docs
-│   ├── 01-gcp-setup.sh                 Phase 0a: project, SA, Pub/Sub, budget
-│   ├── 02-deploy-budget-cap.sh         Phase 0b: hard-cap Cloud Function deploy
-│   ├── 03-set-quotas.sh                Phase 0c: per-API quotas (third guardrail)
-│   ├── budget-cap/{main.py, requirements.txt}   Cloud Function source
-│   ├── upload-policies-to-drive.py     Phase 1 helper (legacy)
-│   ├── sync-live-policies.py           Phase 5: nightly intranet → Vertex sync
-│   ├── PHASE1-VERTEX-SETUP.md          (historical — current backend is Phase 5)
-│   ├── PHASE3-DEPLOY.md                Apps Script + dev deploy walkthrough
-│   └── PHASE4-MARKETPLACE-PUBLISH.md   Marketplace private publish walkthrough
-│
-└── gmail-addon/                        The Apps Script project files
-    ├── Code.gs                         Apps Script entry point + Vertex client
-    ├── appsscript.json                 Manifest (scopes, urlFetchWhitelist, triggers)
-    └── icons/                          Marketplace Store Listing assets
-        ├── policies-addon-32.png
-        ├── policies-addon-48.png
-        ├── policies-addon-96.png
-        ├── policies-addon-128.png
-        └── policies-addon-banner-220x140.png
+├── eval/                     Automated evaluation gate (the trust bar)
+├── scripts/                  Setup, cost-guardrail, and nightly-sync scripts
+└── gmail-addon/              The Gmail Add-on (Apps Script) project files
+    └── icons/                Add-on listing assets
 ```
 
-> **Note**: `gmail-addon/CitationMap.gs` was used during Phase 3 and removed at
-> Phase 5 cutover. The live engine (`your-policies-engine`) returns each
-> reference's Drive file ID directly via `structData.drive_url` /
-> `structData.drive_file_id`, making the static lookup table redundant. Code.gs
-> retains a defensive fallback that gracefully returns null if the file is
-> ever re-added.
+## Security & contributing
 
-## Production architecture (as currently deployed)
-
-```
-Director edits a policy PDF / Doc in
-Intranet/RHub/{Personnel, Public Service}
-              │
-              │  (nightly cron: scripts/sync-live-policies.py)
-              ▼
-SA walks the folders, skipping `Old Policies` + shortcuts to
-the Director's private editable workspace. Downloads each PDF,
-runs through local docling-serve → clean Markdown. Builds a
-JSONL manifest with structData.drive_file_id + .drive_url
-embedded on each document.
-              │
-              ▼
-gs://your-policies-bucket/_manifest.jsonl
-              │
-              │  Discovery Engine documents:import (reconciliationMode=FULL)
-              ▼
-Vertex AI Search data store `your-policies-datastore`
-              │
-              ▼
-Engine `your-policies-engine` (Enterprise tier + LLM Add-On)
-              │
-              ▼  (Apps Script :answer call, after Model Armor pre-screen)
-Staff member in Gmail sees:
-  - Grounded answer with policy citations
-  - Each citation is a clickable button → opens live intranet
-    Drive PDF via structData.drive_url
-```
-
-**Model Armor pre-screen.** Every fresh user question (cache miss) is sent
-to Google's Model Armor `sanitizeUserPrompt` against template
-`your-modelarmor-template` (us-east4) before the Vertex `:answer` call. Currently
-inspect-only — verdicts (prompt-injection, RAI, malicious-URI, CSAM) are
-logged to Cloud Logging on `your-gcp-project` and to Apps Script
-Executions, but never alter the answer the user sees. Fail-open: if Model
-Armor itself errors, Vertex still gets called. See `RUNBOOK.md` →
-"Model Armor — inspect-only pilot" for verdict review, threshold tuning,
-and the enforcement-mode swap.
-
-## For new operators standing this up from scratch
-
-This was a multi-day build. Start with the approved plan in
-`~/.claude/plans/purrfect-puzzling-liskov.md` for context, then:
-
-1. **Phase 0 (cost guardrails)** — run the three setup scripts from Cloud Shell
-   in this order: `01-gcp-setup.sh`, `02-deploy-budget-cap.sh`, `03-set-quotas.sh`.
-   Test the hard cap with a simulated breach (see RUNBOOK).
-2. **Phase 5 (data ingest)** — share the Director's two intranet folders with
-   the `policies-addon@*` SA. Run `scripts/sync-live-policies.py` for the
-   initial load (~98 files Docling-converted and imported).
-3. **Phase 2 (eval)** — `python3 eval/run_eval.py` to verify the engine clears
-   the pass-bar before exposing to staff.
-4. **Phase 3 (Apps Script project)** — follow `scripts/PHASE3-DEPLOY.md`. Code
-   in `gmail-addon/Code.gs` + `appsscript.json` is canonical.
-5. **Phase 4 (Marketplace publish)** — follow `scripts/PHASE4-MARKETPLACE-PUBLISH.md`.
-   Icons in `gmail-addon/icons/`.
-
-For day-to-day operations of the running system, see `RUNBOOK.md`.
-
-## Cost model
-
-Per the approved plan, the three-layer guardrail stack (all three must be in
-place before any Vertex resource is created):
-
-| Layer | What it does | What it can't do |
-|---|---|---|
-| **Budget + email alerts** at 50/90/100/150% of $500/yr | Tells you usage is climbing | Doesn't stop spending |
-| **Hard-cap Cloud Function** | Detaches billing from the project at 100% | Doesn't stop usage between alert windows |
-| **Per-API quotas** (Discovery Engine 100 RPM, Vertex 50k tok/min) | Caps usage even before billing thinks it's reportable | Doesn't help with intentional misuse |
-
-Layers stack: a runaway loop hits the quota wall, alerts fire, hard cap
-detaches billing if alerts are ignored. Tested via simulated breach; see
-`RUNBOOK.md`.
-
-## Why an eval gate
-
-Vertex AI's grounded answers are generally good, but the existing on-prem
-system has been tuned for two specific behaviors that the policy domain
-requires:
-
-1. **Cite the policy.** Every factual claim references a specific document.
-2. **Refuse when the answer isn't in the KB.** Don't invent. Don't reason
-   from general HR knowledge. Direct the staff member to the Director.
-
-The 20-question eval set (`eval/questions.yaml`) covers 8 factual questions
-sampled from real staff usage, 6 vocabulary-translation probes ("time off
-when someone dies" → bereavement), and 6 must-refuse cases ("what's the
-patron's address?" → must decline). Vertex has to clear all four axes of the
-pass-bar (factual accuracy, citation accuracy, refusal correctness, zero
-hallucinations) before the Gmail Add-on is built against it. If it fails
-after iteration, the plan falls back to an on-prem bridge architecture.
+If you use AI coding tools while contributing, do **not** paste secrets, patron
+data, or internal network details into AI context windows. Configuration values
+(credentials, project IDs, internal URLs) belong in your local `.env` and
+deployment config, never in committed code.
 
 ## Related projects
 
-- `/var/opt/rhpl/patron-sync` — the Gmail Add-on whose architecture this
-  reuses (service-account JWT + Apps Script CardService + Marketplace
-  private publish). Reference for the auth + UX patterns.
-- `/var/opt/rhpl/localrag` — the public OSS readme for the existing on-prem
-  policies RAG. Becomes a "previous generation" reference once this project
-  ships.
-- `~/local-ai` — the on-prem AI server. Continues to host Polaris
-  LEAP SQL Helper and Advanced MS SQL Coder; the policies model definition
-  there is retired only after Phase 4 verifies Vertex has caught the existing
-  workload.
+- [`esources`](https://github.com/RHPubLib/esources) — RHPL's open-source
+  eResources service. This add-on reuses the same Gmail Add-on UX pattern as
+  RHPL's other staff tools.
+
+---
+
+Built by [Rochester Hills Public Library](https://www.rhpl.org).

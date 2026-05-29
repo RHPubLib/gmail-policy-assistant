@@ -1,19 +1,11 @@
 # Screenshots
 
-This folder holds screenshots used to illustrate what the Policies Add-on does
-(referenced from the project [README](../README.md)).
+Images used to illustrate the add-on in the project [README](../README.md).
 
-Drop image files here (PNG or JPG). Suggested naming so they sort and read well:
-
-- `01-sidebar.png` — the add-on open in the Gmail sidebar
-- `02-search-results.png` — a policy search and its results
-- `03-answer.png` — an answer with cited policy sources
-
-After adding images, embed them in the main README with, for example:
-
-```markdown
-![Add-on sidebar](screenshots/01-sidebar.png)
-```
+- `01-sidebar-answer.png` — the add-on in the Gmail sidebar: a question, a
+  grounded answer, and clickable policy sources.
+- `02-citation-to-source.png` — a sidebar answer next to the source policy PDF
+  that opened when its citation was clicked.
 
 > Before committing a screenshot, scrub anything sensitive: patron PII, real
 > email addresses/threads, API keys, or internal hostnames.
